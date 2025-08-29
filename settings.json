@@ -10,7 +10,8 @@
   },
   "permissions": {
     "additionalDirectories": [
-      "/Users/your-username/go/src/your-org/your-project"
+      "/Users/your-username/go/src/your-org/your-project",
+      "/Users/gaopeng/aiplayground"
     ],
     "allow": [
       "Bash(find:*)",
@@ -37,7 +38,12 @@
       "Bash(git pull:*)",
       "Bash(git push:*)",
       "Bash(go vet:*)",
-      "Bash(go fmt:*)"
+      "Bash(go fmt:*)",
+      "Bash(git init:*)",
+      "Bash(git branch:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git remote add:*)"
     ],
     "deny": []
   }

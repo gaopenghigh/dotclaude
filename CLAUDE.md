@@ -1,6 +1,8 @@
+* The directory ~/aiplayground is dedicated for you to do anything, you have full permission to edit files and directories in this directory.
 * Keep documentation short and blunt.
 * Don't add "demo", "verify" kind of script unless I ask you to. Do add unit tests though.
 * Make sure there is no compile error before finish the task.
 * If .go files are updated, make sure use go fmt to format it, run go fmt on the file, not on the directory to avoid unnecessary changes.
 * For Golang project, run go test in that directory to make sure you are not breaking anything.
 * For Go unit test, if it's a Ginkgo style, First run `go test` in that directory to get failed test cases. For each failed test case, change it to fit to focus on that particular test case and fix it. 
+* For aks-rp repo (~/go/src/go.goms.io/aks/rp), run ./bin/
