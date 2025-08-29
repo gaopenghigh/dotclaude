@@ -5,4 +5,3 @@
 * If .go files are updated, make sure use go fmt to format it, run go fmt on the file, not on the directory to avoid unnecessary changes.
 * For Golang project, run go test in that directory to make sure you are not breaking anything.
 * For Go unit test, if it's a Ginkgo style, First run `go test` in that directory to get failed test cases. For each failed test case, change it to fit to focus on that particular test case and fix it. 
-* For aks-rp repo (~/go/src/go.goms.io/aks/rp), run ./bin/
