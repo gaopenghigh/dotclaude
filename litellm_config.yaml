@@ -1,0 +1,28 @@
+model_list:
+- model_name: claude-opus-4
+  litellm_params:
+    model: github_copilot/claude-opus-4
+    drop_params: true
+    extra_headers:
+      editor-version: "vscode/1.85.1"           # Editor version
+      editor-plugin-version: "copilot/1.155.0"  # Plugin version
+      Copilot-Integration-Id: "vscode-chat"     # Integration ID
+      user-agent: "GithubCopilot/1.155.0"       # User agent
+- model_name: claude-sonnet-4
+  litellm_params:
+    model: github_copilot/claude-sonnet-4
+    drop_params: true
+    extra_headers:
+      editor-version: "vscode/1.85.1"           # Editor version
+      editor-plugin-version: "copilot/1.155.0"  # Plugin version
+      Copilot-Integration-Id: "vscode-chat"     # Integration ID
+      user-agent: "GithubCopilot/1.155.0"       # User agent
+- model_name: claude-3.7-sonnet
+  litellm_params:
+    model: github_copilot/claude-3.7-sonnet
+    drop_params: true
+    extra_headers:
+      editor-version: "vscode/1.85.1"           # Editor version
+      editor-plugin-version: "copilot/1.155.0"  # Plugin version
+      Copilot-Integration-Id: "vscode-chat"     # Integration ID
+      user-agent: "GithubCopilot/1.155.0"       # User agent
