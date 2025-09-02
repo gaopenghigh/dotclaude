@@ -5,3 +5,4 @@
 * If .go files are updated, make sure use go fmt to format it, run go fmt on the file, not on the directory to avoid unnecessary changes.
 * For Golang project, run go test in that directory to make sure you are not breaking anything.
 * For Go unit test, if it's a Ginkgo style, First run `go test` in that directory to get failed test cases. For each failed test case, change it to fit to focus on that particular test case and fix it. 
+* If editing the aks rp repo https://msazure.visualstudio.com/DefaultCollection/CloudNativeCompute/_git/aks-rp , after the task is done, run `./hack/aksbuilder.sh tidy -w <workspace_path>` (replaces `go mod tidy`) to tidy dependencies, e.g. `./hack/aksbuilder.sh tidy -w resourceprovider/server`.
