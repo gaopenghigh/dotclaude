@@ -11,10 +11,6 @@
     "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1"
   },
   "permissions": {
-    "additionalDirectories": [
-      "/Users/your-username/go/src/your-org/your-project",
-      "/Users/gaopeng/aiplayground"
-    ],
     "allow": [
       "Bash(go:*)",
       "Bash(git:*)",
@@ -37,6 +33,9 @@
       "Bash(chmod:*)",
       "Bash(./hack/aksbuilder.sh test:*)"
     ],
-    "deny": []
+    "deny": [],
+    "additionalDirectories": [
+      "~/aiplayground"
+    ]
   }
 }
