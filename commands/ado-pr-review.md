@@ -31,59 +31,134 @@ Fetch comprehensive PR details including:
 
 Use: `az repos pr show --id <PR-ID>` (ensure you've run `az devops configure` with org/project defaults first)
 
-### 3. Fetching PR Changes - Multi-Strategy Approach
+### 3. Fetching PR Changes - Enhanced REST API Approach
 
-**Primary Strategy - Azure CLI:**
+**Primary Strategy - Azure DevOps REST API (Most Reliable):**
 ```bash
-# Configure defaults first if not done
-az devops configure --defaults organization=<ORG-URL> project=<PROJECT>
+# Get PR file changes using REST API
+PR_ID=<PR-ID>
+ACCESS_TOKEN=$(az account get-access-token --query accessToken -o tsv)
 
-# Get PR details
-az repos pr show --id <PR-ID>
+# Get list of changed files
+wget -q -O /tmp/pr-${PR_ID}-changes.json \
+  "https://dev.azure.com/msazure/CloudNativeCompute/_apis/git/repositories/aks-rp/pullrequests/${PR_ID}/iterations/1/changes?api-version=7.0" \
+  --header="Authorization: Bearer ${ACCESS_TOKEN}"
 
-# Get file changes 
-az repos pr show --id <PR-ID> --query "lastMergeSourceCommit.commitId"
+# If commit IDs are available from PR metadata, get detailed diff
+BASE_COMMIT=$(az repos pr show --id ${PR_ID} --query "lastMergeTargetCommit.commitId" -o tsv)
+TARGET_COMMIT=$(az repos pr show --id ${PR_ID} --query "lastMergeSourceCommit.commitId" -o tsv)
+
+if [[ "$BASE_COMMIT" != "null" && "$TARGET_COMMIT" != "null" ]]; then
+  wget -q -O /tmp/pr-${PR_ID}-diff.json \
+    "https://dev.azure.com/msazure/CloudNativeCompute/_apis/git/repositories/aks-rp/diffs/commits?baseVersionType=commit&baseVersion=${BASE_COMMIT}&targetVersionType=commit&targetVersion=${TARGET_COMMIT}&api-version=7.0" \
+    --header="Authorization: Bearer ${ACCESS_TOKEN}"
+fi
 ```
 
-**Secondary Strategy - Git Operations:**
+**Secondary Strategy - Git Operations (If API fails):**
 
-Use directory `~/aiplayground` for all the git worktree or other commands that fetch/get/edit files.
+Use directory `~/aiplayground` for all git worktree operations to avoid modifying current workspace.
 
 ```bash
-# Find the PR source branch
-git branch -r | grep -i <author-name> | grep -i <keyword>
+# Fetch latest to ensure we have all refs
+git fetch --all
 
-# Get diff using branch comparison
-git diff origin/master...origin/<pr-branch> --name-only
-git diff origin/master...origin/<pr-branch>
+# Try to find the PR branch or merge commit
+PR_BRANCH=$(az repos pr show --id <PR-ID> --query "sourceRefName" -o tsv | sed 's|refs/heads/||')
 
-# Alternative: Use merge base if available
-git merge-base origin/master origin/<pr-branch>
-git diff <merge-base>..origin/<pr-branch>
+if git show-ref --verify --quiet refs/remotes/origin/${PR_BRANCH}; then
+  # Branch exists, use it for diff
+  git diff origin/master...origin/${PR_BRANCH} --name-only
+  git diff origin/master...origin/${PR_BRANCH}
+else
+  # Try to find merge commit by PR ID
+  MERGE_COMMIT=$(git log --grep="<PR-ID>" --oneline master | head -1 | cut -d' ' -f1)
+  if [[ -n "$MERGE_COMMIT" ]]; then
+    git show --name-only ${MERGE_COMMIT}
+    git show ${MERGE_COMMIT}
+  fi
+fi
 ```
 
-**Tertiary Strategy - Worktree Creation:**
+**Fallback Strategy - Temporary Clone (Last Resort):**
 ```bash
-# Create worktree from specific commit (if merge commit available)
-git worktree add ~/aiplayground/pr-<ID>-review <commit-id>
-
-# Create worktree from PR branch
-git worktree add ~/aiplayground/pr-<ID>-review origin/<pr-branch>
+# Only if other methods fail and we need actual file contents
+cd ~/aiplayground
+if [[ ! -d "pr-<ID>-review" ]]; then
+  timeout 300 git clone https://dev.azure.com/msazure/CloudNativeCompute/_git/aks-rp pr-<ID>-review --branch <pr-branch> --single-branch
+fi
 
 # Always cleanup afterwards
-git worktree remove ~/aiplayground/pr-<ID>-review
+trap "rm -rf ~/aiplayground/pr-<ID>-review" EXIT
 ```
 
-**Fallback Strategy - Direct Branch Analysis:**
+### 4. Processing API Responses
+
+**Parse PR Changes from REST API:**
 ```bash
-# If PR is merged, look for merge commit
-git log --grep="<PR-ID>" --oneline master
+# Extract changed files list from API response
+if [[ -f "/tmp/pr-${PR_ID}-changes.json" ]]; then
+  # Parse changed files
+  python3 -c "
+import json, sys
+with open('/tmp/pr-${PR_ID}-changes.json') as f:
+    data = json.load(f)
+    for entry in data.get('changeEntries', []):
+        path = entry['item']['path']
+        change_type = entry['changeType']
+        print(f'{change_type}: {path}')
+" || {
+    # Fallback: use jq if python3 not available
+    jq -r '.changeEntries[]? | "\(.changeType): \(.item.path)"' /tmp/pr-${PR_ID}-changes.json
+  }
+fi
 
-# Check recent merges
-git log --oneline --merges master | head -10
+# For each critical file, try to get individual file content from specific commits
+for file_path in $(jq -r '.changeEntries[]? | select(.changeType=="edit") | .item.path' /tmp/pr-${PR_ID}-changes.json 2>/dev/null || echo ""); do
+  if [[ "$file_path" =~ \.(go|proto|yaml|yml)$ ]]; then
+    echo "Analyzing: $file_path"
+    # Get file content from both commits for comparison if needed
+    BASE_OBJ=$(jq -r ".changeEntries[] | select(.item.path==\"$file_path\") | .item.originalObjectId" /tmp/pr-${PR_ID}-changes.json)
+    TARGET_OBJ=$(jq -r ".changeEntries[] | select(.item.path==\"$file_path\") | .item.objectId" /tmp/pr-${PR_ID}-changes.json)
+    
+    if [[ "$BASE_OBJ" != "null" && "$TARGET_OBJ" != "null" ]]; then
+      # Can get specific file versions via API if needed for detailed analysis
+      echo "File objects: $BASE_OBJ -> $TARGET_OBJ"
+    fi
+  fi
+done
 ```
 
-### 4. Code Analysis Strategy
+**Error Recovery and Validation:**
+```bash
+# Validate API responses
+validate_api_response() {
+  local file=$1
+  if [[ ! -f "$file" ]]; then
+    echo "❌ API response file not found: $file"
+    return 1
+  fi
+  
+  # Check if response contains error
+  if grep -q '"error":\|"message":\|"statusCode":' "$file" 2>/dev/null; then
+    echo "❌ API returned error:"
+    cat "$file"
+    return 1
+  fi
+  
+  return 0
+}
+
+# Use validation before processing
+if validate_api_response "/tmp/pr-${PR_ID}-changes.json"; then
+  echo "✅ Successfully retrieved PR changes"
+else
+  echo "⚠️  API approach failed, falling back to git operations"
+  # Fall back to git-based approaches
+fi
+```
+
+### 5. Code Analysis Strategy
 Create a systematic approach to analyze changes:
 - **File Scope**: Identify all modified files and their types (.go, .proto, .yaml, etc.)
 - **Change Classification**: Categorize changes (feature, bugfix, refactor, cleanup, etc.)
@@ -92,7 +167,7 @@ Create a systematic approach to analyze changes:
 
 **IMPORTANT**: If any step fails, try the next strategy. Always clean up temporary worktrees.
 
-### 5. Technical Review Areas
+### 6. Technical Review Areas
 
 **Code Quality:**
 - Go best practices and idiomatic patterns
@@ -126,31 +201,44 @@ Create a systematic approach to analyze changes:
 - Customer impact and breaking changes
 - Compliance with AKS coding standards
 
-### 6. Error Handling and Recovery
+### 7. Error Handling and Recovery
 
 **Authentication Issues:**
-- If `az login` is required, prompt user to authenticate first
-- Check for proper organization/project configuration
-- Validate repository access permissions
+- If `az account get-access-token` fails, prompt user to run `az login` first
+- Check for proper organization/project configuration with `az devops configure --list`
+- Validate repository access permissions before making API calls
 
-**Git Issues:**
-- If commit/branch not found, try alternative strategies above
-- If worktree creation fails, fall back to direct branch checkout
+**API Issues:**
+- If REST API calls fail (401/403), check authentication and permissions
+- If PR not found (404), verify PR ID is correct and user has access
+- If rate limiting (429), implement exponential backoff or suggest retry later
+- Always validate API responses before processing
+
+**Git Issues (Secondary/Fallback):**
+- If commit/branch not found, try alternative git strategies above
+- If worktree creation fails, use regular checkout in playground directory
 - Always attempt cleanup, but don't fail if cleanup fails
 
 **General Troubleshooting:**
 - Use `--detect false` flag with Azure CLI commands to avoid auto-detection issues
-- Set explicit timeouts for long-running operations
+- Set explicit timeouts for long-running operations (wget, git clone)
+- Store temporary files in `/tmp/pr-<ID>-*` pattern for easy cleanup
 - Provide clear error messages with suggested next steps
 
-### 7. Risk Assessment
+**Graceful Degradation Strategy:**
+1. Try REST API approach first (most reliable)
+2. Fall back to git operations if API fails
+3. Use temporary clone only as last resort
+4. Always clean up temporary files regardless of success/failure
+
+### 8. Risk Assessment
 Evaluate and categorize risks:
 - **Critical**: Security vulnerabilities, data loss, service outages
 - **High**: Breaking changes, performance degradation, reliability issues  
 - **Medium**: Minor bugs, code maintainability, style issues
 - **Low**: Documentation, logging improvements
 
-### 8. Output Format
+### 9. Output Format
 
 **IMPORTANT: Focus on issues found, not verbose positive feedback. Be concise and issue-oriented.**
 
@@ -203,7 +291,7 @@ Structure your review as follows:
 - **Be specific** - provide file names, line numbers, and concrete suggestions
 - **Avoid generic praise** - focus on concrete improvements needed
 
-### 9. Best Practices & Robustness Guidelines
+### 10. Best Practices & Robustness Guidelines
 
 **Analysis Best Practices:**
 - **Be Specific**: Always provide file names and line numbers for issues
@@ -213,23 +301,40 @@ Structure your review as follows:
 - **Consistent**: Follow established patterns and conventions in the codebase
 
 **Robustness Guidelines:**
-- **Always fetch latest**: Run `git fetch --all` before any analysis
+- **API-first approach**: Always try REST API before git operations for better reliability
+- **Validate responses**: Check API responses for errors before processing
 - **Parallel operations**: Use multiple bash tool calls in single message for parallel execution
-- **Timeout management**: Set appropriate timeouts for long operations (max 10 minutes)
-- **Cleanup guarantee**: Always clean up temporary worktrees, even if analysis fails
-- **Graceful degradation**: If one strategy fails, try the next automatically
-- **Clear error reporting**: When operations fail, explain what went wrong and what to try next
+- **Timeout management**: Set appropriate timeouts for API calls (30s) and git operations (5min)
+- **Cleanup guarantee**: Always clean up temporary files in `/tmp/pr-*` pattern
+- **Graceful degradation**: If one strategy fails, automatically try the next
+- **Clear error reporting**: When operations fail, explain what went wrong and suggest next steps
 
 **Command Execution Patterns:**
 ```bash
-# Good: Parallel execution in single message
-git status; git fetch --all; az account show
+# Good: Parallel execution with validation
+az account show; az devops configure --list; git fetch --all
 
-# Good: Cleanup with error handling  
-git worktree remove ~/aiplayground/pr-review || echo "Cleanup failed, continuing..."
+# Good: API call with timeout and error handling
+timeout 30 wget -q -O /tmp/pr-${PR_ID}-changes.json "API_URL" || {
+  echo "❌ API call failed, trying git approach"
+  # fallback strategy here
+}
 
-# Good: Explicit timeout for long operations
-timeout 300 ./hack/aksbuilder.sh test -w <workspace>
+# Good: Cleanup with error handling
+cleanup() {
+  rm -f /tmp/pr-${PR_ID}-*.json
+  rm -rf ~/aiplayground/pr-${PR_ID}-review 2>/dev/null || true
+}
+trap cleanup EXIT
+
+# Good: Validation before processing
+validate_api_response "/tmp/pr-${PR_ID}-changes.json" && {
+  echo "✅ Processing API response"
+  # process API response
+} || {
+  echo "⚠️ Falling back to git operations"
+  # fallback strategy
+}
 ```
 
 ---
