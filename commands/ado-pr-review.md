@@ -47,7 +47,7 @@ az repos pr show --id <PR-ID> --query "lastMergeSourceCommit.commitId"
 
 **Secondary Strategy - Git Operations:**
 
-Use directory ~/aiplayground for all the git worktree or other commands that fetch/get/edit files.
+Use directory `~/aiplayground` for all the git worktree or other commands that fetch/get/edit files.
 
 ```bash
 # Find the PR source branch
@@ -65,13 +65,13 @@ git diff <merge-base>..origin/<pr-branch>
 **Tertiary Strategy - Worktree Creation:**
 ```bash
 # Create worktree from specific commit (if merge commit available)
-git worktree add /tmp/pr-<ID>-review <commit-id>
+git worktree add ~/aiplayground/pr-<ID>-review <commit-id>
 
 # Create worktree from PR branch
-git worktree add /tmp/pr-<ID>-review origin/<pr-branch>
+git worktree add ~/aiplayground/pr-<ID>-review origin/<pr-branch>
 
 # Always cleanup afterwards
-git worktree remove /tmp/pr-<ID>-review
+git worktree remove ~/aiplayground/pr-<ID>-review
 ```
 
 **Fallback Strategy - Direct Branch Analysis:**
@@ -226,7 +226,7 @@ Structure your review as follows:
 git status; git fetch --all; az account show
 
 # Good: Cleanup with error handling  
-git worktree remove /tmp/pr-review || echo "Cleanup failed, continuing..."
+git worktree remove ~/aiplayground/pr-review || echo "Cleanup failed, continuing..."
 
 # Good: Explicit timeout for long operations
 timeout 300 ./hack/aksbuilder.sh test -w <workspace>
