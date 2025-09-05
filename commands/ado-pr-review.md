@@ -39,79 +39,11 @@ For example, for PR `https://msazure.visualstudio.com/CloudNativeCompute/_git/ak
 
 # Step 2: Review
 
-**Code Quality:**
-- Go best practices and idiomatic patterns
-- Error handling completeness and consistency
-- Resource management (context cancellation, cleanup)
-- Concurrency safety and race conditions
-- Memory leaks, goroutine leaks, and performance implications
+Use code-reviewer sub agent to do the first round review, provide detailed context like the `{PR_DATA}` directory, the diff file, and the worktree.
+At the same time, use golang-code-reviewer to do the second round review if any golang code been updated in the PR, also provide detailed context.
+Write the review report into file `{ROOT_SANDBOX}/output/ado-pr-review/pr-{id}/review_report.md`.
 
-**Architecture & Design:**
-- API design consistency
-- Interface contracts and backward compatibility
-- Layer separation and dependency management
-- Design pattern usage and appropriateness
-
-**Testing Coverage:**
-- Unit test completeness for new/changed code
-- Test quality and edge case coverage
-- Mock usage and test isolation
-- Integration test considerations
-
-**Security Review:**
-- Input validation and sanitization
-- Authentication and authorization checks
-- Secrets and credential handling
-- Logging of sensitive information
-
-**⚠️ CRITICAL CONCURRENCY ANALYSIS (MANDATORY):**
-For ANY code containing goroutines, channels, or concurrent operations, perform DEEP analysis:
-
-1. **Goroutine Lifecycle Management:**
-   - Are goroutines properly cancelled when parent context is cancelled?
-   - Is there a mechanism to wait for goroutine completion before function returns?
-   - Are there any code paths that can abandon running goroutines?
-   - Do goroutines have panic recovery mechanisms?
-
-2. **Context Cancellation Propagation:**
-   - Do long-running operations inside goroutines check `ctx.Done()`?
-   - Are child contexts properly cancelled to terminate goroutines?
-   - Are there timeout enforcement mechanisms at appropriate levels?
-
-3. **Channel Safety:**
-   - Can channels become deadlocked if goroutines panic or exit early?
-   - Are channel buffers appropriately sized for the concurrency model?
-   - Are channels properly closed to prevent reader deadlocks?
-
-4. **Race Condition Analysis:**
-   - Are shared data structures accessed safely across goroutines?
-   - Is there proper synchronization for maps, slices, or other shared state?
-   - Are there any write-after-read or read-after-write hazards?
-
-5. **Resource Limits:**
-   - Is there a limit on concurrent goroutine creation?
-   - Could unbounded concurrency overwhelm external APIs or resources?
-   - Are there appropriate backpressure mechanisms?
-
-6. **Memory Management:**
-   - Could goroutines hold references preventing garbage collection?
-   - Are there potential memory leaks from abandoned goroutines?
-   - Do cleanup mechanisms ensure resource deallocation?
-
-**Concurrency Testing Requirements:**
-- Verify tests cover concurrent execution scenarios
-- Check for context cancellation test cases
-- Ensure race condition testing (suggest `-race` flag usage)
-- Validate goroutine leak detection in tests
-
-**FAIL THE REVIEW** if any of these concurrency safety issues are present without proper mitigation.
-
-**IMPORTANT**: 
-- Think Hard - Especially about concurrent code paths.
-- Don't try to build, run unit tests, etc, they are already done by automation pipelines.
-- Out put the review report into `{ROOT_SANDBOX}/output/ado-pr-review/pr-{id}` directory.
-- Create separate detailed concurrency analysis if issues found.
-- Confirm with user whether further review needed.
+Confirm with user whether further review needed.
 
 
 # Step 3: Clean Up
