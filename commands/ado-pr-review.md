@@ -1,5 +1,5 @@
 ---
-allowed-tools: Task(*), Read(*), TodoWrite(*)
+allowed-tools: Task(*), Read(*), TodoWrite(*), Bash(*)
 argument-hint: <PR-URL-or-ID>
 description: Orchestrates Azure DevOps pull request review using specialized sub-agents
 ---
@@ -8,47 +8,66 @@ Review Azure DevOps (ADO) Pull Request.
 
 # Basic Information
 
-Basic information:
 - Org: https://dev.azure.com/msazure
 - Project: CloudNativeCompute
 - Default repo: aks-rp
 
-Directories:
-- ROOT_SANDBOX: `~/aiplayground/`
-- BARE_REPO: `{ROOT_SANDBOX}/ado-pr-fetcher/bare-repos/{repo}`
-- PR_DATA: `{ROOT_SANDBOX}/ado-pr-fetcher/pr-data/{repo}-{id}/`
-
-For example, for PR `https://msazure.visualstudio.com/CloudNativeCompute/_git/aks-rp/pullrequest/13340120`:
-- BARE_REPO is `~/aiplayground/ado-pr-fetcher/bare-repos/aks-rp`
-- PR_DATA is `~/aiplayground/ado-pr-fetcher/pr-data/aks-rp-13340120`
-
 # Step 1: Fetch PR
 
-- Check Azure auth (`az account show`)
-- Configure the defaults of devops via `az devops` CLI command, e.g. `az devops configure --defaults organization=https://dev.azure.com/msazure project=CloudNativeCompute`.
-- Parse PR id (and repo if provided or from URL; fallback to default repo), make sure it's ADO PR not github PR.
-- Get PR metadata by using `az` CLI or call ADO API, e.g. `az repos pr show --id 12345`. We need only these informations: source branch, author (createdBy), description, rewrite as a markdown file `{PR_DATA}/metadata.md`
-- Ensure dirs exist: `{ROOT_SANDBOX}/ado-pr-fetcher/{bare-repos,pr-data}`
-- Ensure bare repo exists (clone if missing)
-- Emsure we are in master branch and have the latest code, which means we are exactly the same as remote master.
-- Get the actual changes of the PR, create diff patch, store as file `{PR_DATA}/diff.patch`.
-    1. Create worktree for this PR branch in `{PR_DATA}/worktree`, if the worktree already exists, remove it via `git worktree` commands.
-    2. In the worktree directory, merge master branch, so it represent the codes when the PR get merged. This step is IMPORTANT!
-    3. In the worktree directory, get the diff via `git diff master`.
+Parse the PR URL or ID to extract repo and PR ID. For example:
+- URL: `https://msazure.visualstudio.com/CloudNativeCompute/_git/aks-rp/pullrequest/13386625`
+- Extract: repo=`aks-rp`, PR ID=`13386625`
 
+Run: `~/.claude/scripts/ado_pr.sh fetch <repo> <pr-id>`
+
+This will create:
+- PR metadata: `~/aiplayground/ado-pr-fetcher/pr-data/{repo}-{pr-id}/metadata.md`
+- Diff patch: `~/aiplayground/ado-pr-fetcher/pr-data/{repo}-{pr-id}/diff.patch`
+- Worktree: `~/aiplayground/ado-pr-fetcher/pr-data/{repo}-{pr-id}/worktree/`
+
+No need to read the directories and files above since they might be very large, and they are prepaired for next step.
 
 # Step 2: Review
 
-Use code-reviewer sub agent to do the first round review, provide detailed context like the `{PR_DATA}` directory, the diff file, and the worktree.
+Use code-reviewer sub agent to do the first round review, provide detailed context like the PR data directory, the diff file, and the worktree.
 At the same time, use golang-code-reviewer to do the second round review if any golang code been updated in the PR, also provide detailed context.
-Write the review report into file `{ROOT_SANDBOX}/output/ado-pr-review/pr-{id}/review_report.md`.
 
-Confirm with user whether further review needed.
+Write the review report into file `~/aiplayground/output/ado-pr-review/pr-{pr-id}/review_report.md`. Rules:
+- DO NOT summarize what the PR does.
+- DO NOT provide general commentary.
+- DO NOT provide general conclusion.
+
+The report should have structure like this:
+```
+## Issue 1: xxx (Severity: Critical|High|Medium|Low)
+
+Location: `putagentpoolasync_machines.go:214-251`
+
+### Issue
+
+<Describe the issue.>
+
+### Recommendation
+
+<Some recommendations>
+
+## Issue 2: xxx (Severity: Critical|High|Medium|Low)
+
+Location: `putagentpoolasync_machines.go:214-251`
+
+### Issue
+
+<Describe the issue.>
+
+### Recommendation
+
+<Some recommendations>
+
+## Issue 3: xxx (Severity: Critical|High|Medium|Low)
+...
+```
 
 
 # Step 3: Clean Up
 
-Confirm with user before starting clean up, if user agreed:
-1. Understand which PR (repo and PR ID) that need to clean up.
-2. Clean up worktree `git worktree` commands.
-3. Remove `{PR_DATA}` directory.
+Confirm with user whether further review needed, if not, run `~/.claude/scripts/ado_pr.sh cleanup <repo> <pr-id>`.

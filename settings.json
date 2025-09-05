@@ -33,6 +33,7 @@
       "Bash(mkdir:*)",
       "Bash(mv:*)",
       "Bash(cp:*)",
+      "Bash(az:*)",
       "Bash(chmod:*)",
       "Bash(./hack/aksbuilder.sh test:*)"
     ],
