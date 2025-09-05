@@ -67,6 +67,7 @@ Location: `putagentpoolasync_machines.go:214-251`
 ...
 ```
 
+If no issues found, just say LGTM.
 
 # Step 3: Clean Up
 
