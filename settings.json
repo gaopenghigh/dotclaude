@@ -12,6 +12,9 @@
   },
   "permissions": {
     "allow": [
+      "Edit",
+      "Write",
+      "Delete",
       "Bash(go:*)",
       "Bash(git:*)",
       "Bash(awk:*)",
