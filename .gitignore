@@ -3,6 +3,7 @@ ide/
 shell-snapshots/
 projects/
 todos/
+plugins/
 
 # Temporary files
 *.tmp
