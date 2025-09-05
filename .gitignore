@@ -9,8 +9,3 @@ plugins/
 *.tmp
 *.log
 .DS_Store
-
-# User-specific configuration (users should create their own)
-.ado-pr-review.conf
-
-# Plugin metadata is included (sanitized)
