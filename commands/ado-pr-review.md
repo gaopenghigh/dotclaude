@@ -39,7 +39,19 @@ Write the review report into file `~/aiplayground/output/ado-pr-review/pr-{pr-id
 
 The report should have structure like this:
 ```
-## Issue 1: xxx (Severity: Critical|High|Medium|Low)
+## Issue 1: xxx (Severity: Critical|High|Medium)
+
+Location: `putagentpoolasync_machines.go:214-251`
+
+### Issue
+
+<Describe the issue, explaination>
+
+### Recommendation
+
+<Some recommendations>
+
+## Issue 2: xxx (Severity: Critical|High|Medium)
 
 Location: `putagentpoolasync_machines.go:214-251`
 
@@ -51,22 +63,13 @@ Location: `putagentpoolasync_machines.go:214-251`
 
 <Some recommendations>
 
-## Issue 2: xxx (Severity: Critical|High|Medium|Low)
-
-Location: `putagentpoolasync_machines.go:214-251`
-
-### Issue
-
-<Describe the issue.>
-
-### Recommendation
-
-<Some recommendations>
-
-## Issue 3: xxx (Severity: Critical|High|Medium|Low)
+## Issue 3: xxx (Severity: Critical|High|Medium)
 ...
 ```
 
+Ignore Low severity issues.
+Merge same issues.
+Explain in detail for the critical issues.
 If no issues found, just say LGTM.
 
 # Step 3: Clean Up

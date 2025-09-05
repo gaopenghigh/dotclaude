@@ -54,5 +54,6 @@ For ANY code containing goroutines, channels, or concurrent operations, perform 
 - DO NOT provide general commentary
 - DO NOT try to build, run unit tests, etc, they are already done by automation pipelines.
 - Create separate detailed concurrency analysis if issues found.
-- List issues you found, highlight with line references.
+- List issues you found, highlight with line references, set severity to Critical|High|Medium, igore Low severity issues.
+- Explain in detail for the critical issues.
 - Provide suggestions on each issue.
