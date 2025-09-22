@@ -32,7 +32,7 @@ No need to read the directories and files above since they might be very large, 
 Use code-reviewer sub agent to do the first round review, provide detailed context like the PR data directory, the diff file, and the worktree.
 At the same time, use golang-code-reviewer to do the second round review if any golang code been updated in the PR, also provide detailed context.
 
-Write the review report into file `~/aiplayground/output/ado-pr-review/pr-{pr-id}/review_report.md`. Rules:
+Write the review report into file `~/aiplayground/output/ado-pr-review/pr-{pr-id}/review_report_details.md`. Rules:
 - DO NOT summarize what the PR does.
 - DO NOT provide general commentary.
 - DO NOT provide general conclusion.
@@ -72,6 +72,12 @@ Merge same issues.
 Explain in detail for the critical issues.
 If no issues found, just say LGTM.
 
+
+# Step 4: Generate Review Report
+
+Think hard on every issue that reported in the report of step 3, check with the actual code. Think whether it's a real issue or not, igonre if it's not a real issue. Update the code line number if it's wrong.
+Then update the final review report in `~/aiplayground/output/ado-pr-review/pr-{pr-id}/review_report.md`, if it's a real critical issue, explian with code details.
+
 # Step 3: Clean Up
 
-Confirm with user whether further review needed, if not, run `~/.claude/scripts/ado_pr.sh cleanup <repo> <pr-id>`.
+Confirm with user whether further review needed, if not, run `~/.claude/scripts/ado_pr.sh cleanup <repo> <pr-id>`. By default you should do the cleanup work.
