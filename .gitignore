@@ -9,3 +9,4 @@ plugins/
 *.tmp
 *.log
 .DS_Store
+history.jsonl
