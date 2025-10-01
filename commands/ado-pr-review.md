@@ -80,4 +80,4 @@ Then update the final review report in `~/aiplayground/output/ado-pr-review/pr-{
 
 # Step 3: Clean Up
 
-Confirm with user whether further review needed, if not, run `~/.claude/scripts/ado_pr.sh cleanup <repo> <pr-id>`. By default you should do the cleanup work.
+Confirm with user whether further review needed, if not, run `~/.claude/scripts/ado_pr.sh cleanup <repo> <pr-id>`.
