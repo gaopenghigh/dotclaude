@@ -4,6 +4,9 @@ shell-snapshots/
 projects/
 todos/
 plugins/
+.credentials.json
+config.json
+history.jsonl
 
 # Temporary files
 *.tmp
