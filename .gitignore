@@ -7,6 +7,8 @@ plugins/
 .credentials.json
 config.json
 history.jsonl
+debug/
+file-history/
 
 # Temporary files
 *.tmp
