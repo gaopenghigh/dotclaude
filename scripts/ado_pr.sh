@@ -24,6 +24,26 @@ log_error() {
     echo "[ERROR] $1"
 }
 
+# Run git command with timeout to prevent hanging on auth
+run_git_with_timeout() {
+    local timeout_seconds=${GIT_TIMEOUT:-300}  # 5 minutes default
+    local git_cmd="$*"
+
+    log_info "Running git command with ${timeout_seconds}s timeout: git $git_cmd"
+
+    if ! timeout "$timeout_seconds" git $git_cmd; then
+        local exit_code=$?
+        if [ $exit_code -eq 124 ]; then
+            log_error "Git command timed out after ${timeout_seconds}s. This may indicate authentication issues."
+            log_error "Please ensure you are authenticated with Azure DevOps."
+            log_error "You may need to run 'az devops login' or configure git credentials."
+        else
+            log_error "Git command failed with exit code $exit_code"
+        fi
+        return $exit_code
+    fi
+}
+
 # Show usage
 usage() {
     echo "Usage: $0 <command> <repo> <pr-id>"
@@ -42,14 +62,33 @@ usage() {
 check_azure_auth() {
     log_info "Checking Azure authentication..."
     if ! az account show >/dev/null 2>&1; then
-        log_error "Not authenticated with Azure. Run 'az login' first."
+        log_error "Not authenticated with Azure. Initiating device code authentication..."
+        echo ""
+        echo "Please authenticate using the device code below:"
+        echo "=============================================="
+
+        if ! az login --use-device-code; then
+            log_error "Azure authentication failed"
+            exit 1
+        fi
+
+        echo "=============================================="
+        log_info "Azure authentication completed successfully"
+    fi
+
+    # Verify we have a valid subscription
+    if ! az account show >/dev/null 2>&1; then
+        log_error "No valid Azure subscription found. Please run 'az account set --subscription <subscription-id>'"
         exit 1
     fi
-    
+
     # Configure devops defaults
     log_info "Configuring Azure DevOps defaults..."
-    az devops configure --defaults organization="$ORG" project="$PROJECT" >/dev/null 2>&1
-    
+    if ! az devops configure --defaults organization="$ORG" project="$PROJECT" >/dev/null 2>&1; then
+        log_error "Failed to configure Azure DevOps defaults"
+        exit 1
+    fi
+
     log_info "Azure authentication verified"
 }
 
@@ -132,27 +171,37 @@ EOF
 setup_bare_repo() {
     local repo="$1"
     local bare_repo_path="$BARE_REPOS_DIR/$repo"
-    
+
     if [ ! -d "$bare_repo_path" ]; then
         log_info "Cloning bare repository $repo..."
         local repo_url="$ORG/$PROJECT/_git/$repo"
-        if ! git clone --bare "$repo_url" "$bare_repo_path" >/dev/null 2>&1; then
-            log_error "Failed to clone repository $repo"
+        if ! run_git_with_timeout clone --bare "$repo_url" "$bare_repo_path"; then
+            log_error "Failed to clone repository $repo from $repo_url"
             exit 1
         fi
     else
         log_info "Updating existing bare repository..."
         cd "$bare_repo_path"
-        git fetch origin >/dev/null 2>&1
+        if ! run_git_with_timeout fetch origin; then
+            log_error "Failed to fetch updates for repository $repo"
+            exit 1
+        fi
     fi
-    
+
     # Ensure we have the latest master branch from remote
     cd "$bare_repo_path"
     log_info "Fetching latest master branch..."
-    git fetch origin >/dev/null 2>&1
+    if ! run_git_with_timeout fetch origin; then
+        log_error "Failed to fetch latest changes from origin"
+        exit 1
+    fi
+
     log_info "Updating master to match remote master exactly..."
-    git update-ref refs/heads/master refs/remotes/origin/master >/dev/null 2>&1
-    
+    if ! git update-ref refs/heads/master refs/remotes/origin/master; then
+        log_error "Failed to update master branch reference"
+        exit 1
+    fi
+
     log_info "Bare repository ready at $bare_repo_path"
 }
 
@@ -162,10 +211,10 @@ create_pr_worktree() {
     local pr_id="$2"
     local source_branch="$3"
     local pr_data_path="$4"
-    
+
     local bare_repo_path="$BARE_REPOS_DIR/$repo"
     local worktree_path="$pr_data_path/worktree"
-    
+
     # Remove existing worktree if it exists
     if [ -d "$worktree_path" ]; then
         log_info "Removing existing worktree..."
@@ -173,36 +222,43 @@ create_pr_worktree() {
         git worktree remove --force "$worktree_path" >/dev/null 2>&1 || true
         rm -rf "$worktree_path"
     fi
-    
+
     log_info "Creating worktree for branch $source_branch..."
     cd "$bare_repo_path"
-    
+
     # The branch should already be available as origin/$source_branch
     log_info "Verifying branch exists..."
     if ! git rev-parse "origin/$source_branch" >/dev/null 2>&1; then
-        log_error "Branch origin/$source_branch not found"
+        log_error "Branch origin/$source_branch not found in repository"
+        log_error "Available branches:"
+        git branch -r | head -10
         exit 1
     fi
-    
+
     # Create worktree
     if ! git worktree add "$worktree_path" "origin/$source_branch" >/dev/null 2>&1; then
-        log_error "Failed to create worktree"
+        log_error "Failed to create worktree for branch origin/$source_branch"
         exit 1
     fi
-    
+
     log_info "Merging master branch into worktree..."
     cd "$worktree_path"
-    
+
     # Merge master to simulate the final state
     if ! git merge origin/master --no-edit >/dev/null 2>&1; then
         log_warn "Merge conflicts detected, continuing with current state"
+        log_warn "The diff will show the branch state without merge resolution"
     fi
-    
+
     log_info "Generating diff patch..."
     local diff_file="$pr_data_path/diff.patch"
-    git diff origin/master > "$diff_file"
-    
-    log_info "Diff patch saved to $diff_file"
+    if ! git diff origin/master > "$diff_file"; then
+        log_error "Failed to generate diff patch"
+        exit 1
+    fi
+
+    local diff_size=$(wc -c < "$diff_file" 2>/dev/null || echo "0")
+    log_info "Diff patch saved to $diff_file (${diff_size} bytes)"
     log_info "Worktree created at $worktree_path"
 }
 
