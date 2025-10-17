@@ -75,9 +75,9 @@ If no issues found, just say LGTM.
 
 # Step 4: Generate Review Report
 
-Think hard on every issue that reported in the report of step 3, check with the actual code. Think whether it's a real issue or not, igonre if it's not a real issue.
+Think hard on every issue that reported in the report of step 3, check with the actual code. Think whether it's a real issue or not, igonre if it's not a real issue. For nil pointer check issues, read similar codes to verify whether this is a real issue.
 Then update the final review report in `~/aiplayground/output/ado-pr-review/pr-{pr-id}/review_report.md`, if it's a real critical issue, explian with code details.
 
-# Step 3: Clean Up
+# Step 5: Clean Up
 
 Confirm with user whether further review needed, if not, run `~/.claude/scripts/ado_pr.sh cleanup <repo> <pr-id>`. Don't cleanup untill you get confirmation.

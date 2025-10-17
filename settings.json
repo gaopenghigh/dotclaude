@@ -41,5 +41,6 @@
     "additionalDirectories": [
       "~/aiplayground"
     ]
-  }
+  },
+  "alwaysThinkingEnabled": true
 }
