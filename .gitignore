@@ -9,6 +9,8 @@ config.json
 history.jsonl
 debug/
 file-history/
+plans/
+stats-cache.json
 
 # Temporary files
 *.tmp

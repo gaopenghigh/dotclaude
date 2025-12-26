@@ -42,6 +42,9 @@
       "~/aiplayground"
     ]
   },
+  "model": "opus",
   "alwaysThinkingEnabled": true,
-  "model": "opus"
+  "enabledPlugins": {
+    "aks@aks-claudecode-market": true
+  }
 }
