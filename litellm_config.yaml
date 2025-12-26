@@ -3,25 +3,9 @@ general_settings:
 litellm_settings:
   drop_params: true
 model_list:
-- model_name: claude-opus-41
+- model_name: claude-opus-4.5
   litellm_params:
-    model: github_copilot/claude-opus-41
-    extra_headers:
-      editor-version: "vscode/1.85.1"           # Editor version
-      editor-plugin-version: "copilot/1.155.0"  # Plugin version
-      Copilot-Integration-Id: "vscode-chat"     # Integration ID
-      user-agent: "GithubCopilot/1.155.0"       # User agent
-- model_name: gpt-5
-  litellm_params:
-    model: github_copilot/gpt-5
-    extra_headers:
-      editor-version: "vscode/1.85.1"           # Editor version
-      editor-plugin-version: "copilot/1.155.0"  # Plugin version
-      Copilot-Integration-Id: "vscode-chat"     # Integration ID
-      user-agent: "GithubCopilot/1.155.0"       # User agent
-- model_name: claude-opus-4
-  litellm_params:
-    model: github_copilot/claude-opus-4
+    model: github_copilot/claude-opus-4.5
     extra_headers:
       editor-version: "vscode/1.85.1"           # Editor version
       editor-plugin-version: "copilot/1.155.0"  # Plugin version
@@ -35,9 +19,17 @@ model_list:
       editor-plugin-version: "copilot/1.155.0"  # Plugin version
       Copilot-Integration-Id: "vscode-chat"     # Integration ID
       user-agent: "GithubCopilot/1.155.0"       # User agent
-- model_name: claude-sonnet-4
+- model_name: gpt-5.2
   litellm_params:
-    model: github_copilot/claude-sonnet-4
+    model: github_copilot/gpt-5.2
+    extra_headers:
+      editor-version: "vscode/1.85.1"           # Editor version
+      editor-plugin-version: "copilot/1.155.0"  # Plugin version
+      Copilot-Integration-Id: "vscode-chat"     # Integration ID
+      user-agent: "GithubCopilot/1.155.0"       # User agent
+- model_name: gemini-3-pro
+  litellm_params:
+    model: github_copilot/gemini-3-pro
     extra_headers:
       editor-version: "vscode/1.85.1"           # Editor version
       editor-plugin-version: "copilot/1.155.0"  # Plugin version
@@ -45,7 +37,7 @@ model_list:
       user-agent: "GithubCopilot/1.155.0"       # User agent
 - model_name: "*"
   litellm_params:
-    model: "github_copilot/*"
+    model: github_copilot/claude-sonnet-4.5
     extra_headers:
       editor-version: "vscode/1.85.1"           # Editor version
       editor-plugin-version: "copilot/1.155.0"  # Plugin version
