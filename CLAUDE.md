@@ -1,8 +1,0 @@
-* The directory ~/aiplayground is dedicated for you to do anything, you have full permission to edit files and directories in this directory.
-* Keep documentation short and blunt.
-* Don't add "demo", "verify" kind of script unless I ask you to. Do add unit tests though.
-* Before finish the task, make sure there is no compile errors in all files including unit test files.
-* If Golang files are updated, make sure use go fmt to format it, run go fmt on the file, not on the directory to avoid unnecessary changes.
-* For Golang project, always run `go test` in every directory that has files been updated, make sure all unit tests can pass.
-* For Go unit test, if it's a Ginkgo style, First run `go test` in that directory to get failed test cases. For each failed test case, change it to FIt to focus on that particular test case and fix it. 
-* If editing the aks rp repo https://msazure.visualstudio.com/DefaultCollection/CloudNativeCompute/_git/aks-rp , after the task is done, run `./hack/aksbuilder.sh tidy -w <workspace_path>` (replaces `go mod tidy`) to tidy dependencies, e.g. `./hack/aksbuilder.sh tidy -w resourceprovider/server`.

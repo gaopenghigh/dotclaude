@@ -43,8 +43,9 @@
     ]
   },
   "model": "opus",
-  "alwaysThinkingEnabled": true,
   "enabledPlugins": {
-    "aks@aks-claudecode-market": true
-  }
+    "aks-agents@aks-agents": true,
+    "rp@aks-agents": true
+  },
+  "alwaysThinkingEnabled": true
 }
