@@ -17,3 +17,4 @@ stats-cache.json
 *.log
 .DS_Store
 history.jsonl
+cache/
