@@ -1,0 +1,26 @@
+let _endTime = datetime(2026-01-14T23:11:50Z);
+let _startTime = datetime(2026-01-14T22:11:50Z);
+// Please enter your KQL query (Example):
+// <table name>
+// | where <datetime column> between (['_startTime'] .. ['_endTime']) // Time range filtering
+// | take 100
+ManagedClusterSnapshot
+| where PreciseTimeStamp between (['_startTime'] .. ['_endTime'])
+| where provisioningState == "Failed"
+| where powerState contains "Running"
+| where isTestSubscription(subscription) == false
+| where sku !contains "Free"
+| project PreciseTimeStamp, location, sku, id, latestOperationID, subscription
+| join (cluster('apadata.westus').database('AKS').AKS_Subscriptions_Snapshot
+| extend subscription = SubscriptionGuid
+| project subscription, BillingType, Customer, OfferName ) on subscription
+| where BillingType != "Internal"
+| where BillingType == "External - Billable"
+| join (AsyncQoSEvents
+| where resultType == 2
+| where resultCode != "NotLatestOperation"
+| project opTime=PreciseTimeStamp, resultCode, resultSubCode, errorDetails, latency, latestOperationID=operationID) on latestOperationID
+| sort by tostring(sku) desc
+| extend asiLink = strcat("https://asi.azure.ms/services/AKS/pages/Operation%20Ids?operationID=",latestOperationID)//,"&globalFrom=", ['_startTime'], "&globalTo=", ['_endTime'])
+| distinct opTime, latestOperationID, id,asiLink, location,resultCode, resultSubCode, errorDetails, tostring(sku)
+| sort by opTime desc

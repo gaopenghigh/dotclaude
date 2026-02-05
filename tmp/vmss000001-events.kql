@@ -1,0 +1,10 @@
+// Query all events for vmss000001 on Jan 19
+let qFrom = datetime("2026-01-19T00:00:00Z");
+let qTo = datetime("2026-01-19T02:00:00Z");
+let qCCP = "67e347c35b89890001621aeb";
+AKSKubeEvents
+| where PreciseTimeStamp between (qFrom .. qTo)
+| where cluster_id == qCCP
+| where name contains "vmss000001" or reportingInstance contains "vmss000001" or message contains "vmss000001"
+| project PreciseTimeStamp, reason, name, message, reportingController
+| order by PreciseTimeStamp asc

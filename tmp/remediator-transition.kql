@@ -1,0 +1,15 @@
+// Query remediator messages around the transition
+let qFrom = datetime("2026-01-18T23:55:00Z");
+let qTo = datetime("2026-01-19T00:16:00Z");
+let qCCP = "67e347c35b89890001621aeb";
+CPRemediatorLogs
+| where PreciseTimeStamp between (qFrom .. qTo)
+| where namespace == qCCP
+| extend logPreciseTime = todatetime(logPreciseTime)
+| extend alert = tostring(alert)
+| extend msg = tostring(msg)
+| where msg !has "config reloaded"
+| where alert in ("ReimageNode", "RedeployNode", "RestartNode") or alert == "na"
+| project logPreciseTime, alert, msg
+| distinct logPreciseTime, alert, msg
+| order by logPreciseTime asc

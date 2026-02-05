@@ -1,0 +1,14 @@
+// Query detailed ReimageNode actions on Jan 19 when it actually worked
+let qFrom = datetime("2026-01-19T00:10:00Z");
+let qTo = datetime("2026-01-19T00:30:00Z");
+let qCCP = "67e347c35b89890001621aeb";
+CPRemediatorLogs
+| where PreciseTimeStamp between (qFrom .. qTo)
+| where namespace == qCCP
+| extend logPreciseTime = todatetime(logPreciseTime)
+| extend alert = tostring(alert)
+| extend msg = tostring(msg)
+| where msg !has "config reloaded"
+| project logPreciseTime, alert, msg
+| distinct logPreciseTime, alert, msg
+| order by logPreciseTime asc

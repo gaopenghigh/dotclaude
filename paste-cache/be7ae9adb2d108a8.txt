@@ -1,0 +1,13 @@
+We are Azure Container Apps service team. All nodes in AKS cluster Stuck in NotReady State for 4+ Days. We want to know why the node change from Ready to Not Ready at about 2026-01-14T12:14:58.096932Z, and then after 4+ days, at 2026-01-19T00:26:48.12255Z, all nodes change from Not Ready to Ready?
+
+In our backend logs, we can find some error as below:
+
+InvolvedObject Kind: 'Node', InvolvedObject Name: 'aks-systempool-99008344-vmss000002'. System Event: Kubeconfig file or cert files not found, skip apiserver check.
+Required endpoints are unreachable (curl: (28) Resolving timed out after 5001 milliseconds: https://management.azure.com ;curl: (28) Resolving timed out after 5001 milliseconds: https://packages.microsoft.com ;curl: (28) Resolving timed out after 5001 milliseconds: https://acs-mirror.azureedge.net/acs-mirror/healthz ), aka.ms/AArpzy5 for more information..
+
+And we find that after rebooted, the node became ready.
+image.png
+AKS Resource ID: subscriptions/36d1167a-466d-4e63-891d-122f7fa2a3b9/resourceGroups/gentlegrass-72cdfb51-rg/providers/Microsoft.ContainerService/managedClusters/gentlegrass-72cdfb51
+
+region: centralindia
+Issue time window: 2026-01-14T12:14:58.096932Z ~ 2026-01-19T00:26:48.12255Z

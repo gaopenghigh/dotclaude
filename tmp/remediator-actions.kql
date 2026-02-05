@@ -1,0 +1,14 @@
+// Query CPRemediatorLogs for actual remediation actions during the 4-day gap
+let qFrom = datetime("2026-01-14T00:00:00Z");
+let qTo = datetime("2026-01-19T06:00:00Z");
+let qCCP = "67e347c35b89890001621aeb";
+CPRemediatorLogs
+| where PreciseTimeStamp between (qFrom .. qTo)
+| where namespace == qCCP
+| extend logPreciseTime = todatetime(logPreciseTime)
+| extend alert = tostring(alert)
+| extend msg = tostring(msg)
+| where msg !has "config reloaded"
+| where msg has "Attempting" or msg has "Finished" or msg has "error" or msg has "Skipping" or msg has "Running" or alert has "Node"
+| project logPreciseTime, alert, msg
+| order by logPreciseTime asc

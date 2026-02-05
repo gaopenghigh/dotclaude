@@ -1,0 +1,11 @@
+// Query auto-repair events for cluster 67e347c35b89890001621aeb
+// Time range: Jan 14-19, 2026
+let qFrom = datetime("2026-01-14T00:00:00Z");
+let qTo = datetime("2026-01-19T12:00:00Z");
+let qCCP = "67e347c35b89890001621aeb";
+AKSKubeEvents
+| where PreciseTimeStamp between (qFrom .. qTo)
+| where cluster_id == qCCP
+| where reportingController == "aks-auto-repair"
+| project PreciseTimeStamp, reason, name, message, reportingInstance
+| order by PreciseTimeStamp asc

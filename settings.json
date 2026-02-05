@@ -45,7 +45,8 @@
   "model": "opus",
   "enabledPlugins": {
     "aks-agents@aks-agents": true,
-    "rp@aks-agents": true
+    "rp@aks-agents": true,
+    "gopls-lsp@claude-plugins-official": true
   },
   "alwaysThinkingEnabled": true
 }

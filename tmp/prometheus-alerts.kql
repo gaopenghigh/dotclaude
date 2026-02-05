@@ -1,0 +1,14 @@
+// Query Prometheus alerts that triggered the remediation
+let qFrom = datetime("2026-01-18T23:00:00Z");
+let qTo = datetime("2026-01-19T01:00:00Z");
+let qCCP = "67e347c35b89890001621aeb";
+CPRemediatorLogs
+| where PreciseTimeStamp between (qFrom .. qTo)
+| where namespace == qCCP
+| extend logPreciseTime = todatetime(logPreciseTime)
+| extend alert = tostring(alert)
+| extend msg = tostring(msg)
+| where msg has "received new alert" or msg has "firing" or msg has "AlertReceiver" or msg has "new alert"
+| project logPreciseTime, alert, msg
+| distinct logPreciseTime, alert, msg
+| order by logPreciseTime asc

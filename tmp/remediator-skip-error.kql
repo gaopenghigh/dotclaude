@@ -1,0 +1,15 @@
+// Query CPRemediatorLogs for skip/error messages on Jan 14
+let qFrom = datetime("2026-01-14T12:00:00Z");
+let qTo = datetime("2026-01-14T20:00:00Z");
+let qCCP = "67e347c35b89890001621aeb";
+CPRemediatorLogs
+| where PreciseTimeStamp between (qFrom .. qTo)
+| where namespace == qCCP
+| extend logPreciseTime = todatetime(logPreciseTime)
+| extend alert = tostring(alert)
+| extend msg = tostring(msg)
+| where msg has "skip" or msg has "error" or msg has "fail" or msg has "cannot" or msg has "not ready" or msg has "no nodes"
+| project logPreciseTime, alert, msg
+| distinct logPreciseTime, alert, msg
+| order by logPreciseTime asc
+| take 200

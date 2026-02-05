@@ -1,0 +1,13 @@
+// Query CPRemediatorLogs for all alerts during the 4-day gap (not just node alerts)
+let qFrom = datetime("2026-01-14T12:00:00Z");
+let qTo = datetime("2026-01-19T01:00:00Z");
+let qCCP = "67e347c35b89890001621aeb";
+CPRemediatorLogs
+| where PreciseTimeStamp between (qFrom .. qTo)
+| where namespace == qCCP
+| extend logPreciseTime = todatetime(logPreciseTime)
+| extend alert = tostring(alert)
+| extend msg = tostring(msg)
+| where msg !has "config reloaded"
+| summarize count() by bin(logPreciseTime, 1h), alert
+| order by logPreciseTime asc

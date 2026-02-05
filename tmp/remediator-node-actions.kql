@@ -1,0 +1,13 @@
+// Query CPRemediatorLogs specifically for Node remediation actions
+let qFrom = datetime("2026-01-14T00:00:00Z");
+let qTo = datetime("2026-01-19T06:00:00Z");
+let qCCP = "67e347c35b89890001621aeb";
+CPRemediatorLogs
+| where PreciseTimeStamp between (qFrom .. qTo)
+| where namespace == qCCP
+| extend logPreciseTime = todatetime(logPreciseTime)
+| extend alert = tostring(alert)
+| extend msg = tostring(msg)
+| where alert has "Node" or msg has "Restart" or msg has "Reimage" or msg has "Redeploy" or msg has "vmss00000"
+| project logPreciseTime, alert, msg
+| order by logPreciseTime asc

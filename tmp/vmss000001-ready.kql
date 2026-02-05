@@ -1,0 +1,11 @@
+// Query vmss000001 NodeReady events until it became Ready
+let qFrom = datetime("2026-01-19T00:00:00Z");
+let qTo = datetime("2026-01-20T00:00:00Z");
+let qCCP = "67e347c35b89890001621aeb";
+AKSKubeEvents
+| where PreciseTimeStamp between (qFrom .. qTo)
+| where cluster_id == qCCP
+| where name == "aks-systempool-99008344-vmss000001"
+| where reason == "NodeReady" or reason == "NodeNotReady"
+| project PreciseTimeStamp, reason, name, message, reportingController
+| order by PreciseTimeStamp asc

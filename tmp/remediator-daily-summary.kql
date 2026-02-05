@@ -1,0 +1,18 @@
+// Query CPRemediatorLogs daily summary for the 4-day gap
+let qFrom = datetime("2026-01-14T00:00:00Z");
+let qTo = datetime("2026-01-19T06:00:00Z");
+let qCCP = "67e347c35b89890001621aeb";
+CPRemediatorLogs
+| where PreciseTimeStamp between (qFrom .. qTo)
+| where namespace == qCCP
+| extend logPreciseTime = todatetime(logPreciseTime)
+| extend msg = tostring(msg)
+| summarize 
+    total_logs = count(),
+    skip_count = countif(msg has "Skipping"),
+    error_count = countif(msg has "error" or msg has "fail"),
+    config_reload_count = countif(msg has "config reloaded"),
+    attempting_count = countif(msg has "Attempting"),
+    finished_count = countif(msg has "Finished")
+    by bin(logPreciseTime, 1d)
+| order by logPreciseTime asc

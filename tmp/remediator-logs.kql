@@ -1,0 +1,11 @@
+// Query CPRemediatorLogs for cluster remediation activity
+// Time range: Jan 14-19, 2026
+let qFrom = datetime("2026-01-14T00:00:00Z");
+let qTo = datetime("2026-01-19T12:00:00Z");
+let qCCP = "67e347c35b89890001621aeb";
+cluster("akshuba.centralus").database("AKSccplogs").CPRemediatorLogs
+| where PreciseTimeStamp between (qFrom .. qTo)
+| where namespace == qCCP
+| project PreciseTimeStamp, message, level, properties
+| order by PreciseTimeStamp asc
+| take 100

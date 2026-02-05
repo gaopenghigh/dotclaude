@@ -1,0 +1,101 @@
+time: 2026-01-19 14:17:22.221891726 +0000 UTC
+autoscalerStatus: Running
+clusterWide:
+  health:
+    status: Unhealthy
+    nodeCounts:
+      registered:
+        total: 98
+        ready: 49
+        notStarted: 0
+        unready:
+          total: 49
+          resourceUnready: 0
+      longUnregistered: 0
+      unregistered: 0
+    lastProbeTime: "2026-01-19T14:17:22.221891726Z"
+    lastTransitionTime: "2026-01-17T07:45:47.772942673Z"
+  scaleUp:
+    status: NoActivity
+    lastProbeTime: "2026-01-19T14:17:22.221891726Z"
+    lastTransitionTime: "2026-01-17T08:02:56.944264654Z"
+  scaleDown:
+    status: CandidatesPresent
+    candidates: 42
+    lastProbeTime: "2026-01-17T07:45:37.678859408Z"
+    lastTransitionTime: "2026-01-16T16:50:45.632836754Z"
+nodeGroups:
+- name: aks-la100-93641130-vmss
+  health:
+    status: Healthy
+    cloudProviderTarget: 0
+    minSize: 0
+    maxSize: 250
+  scaleUp:
+    status: NoActivity
+  scaleDown:
+    status: NoCandidates
+    lastProbeTime: "2026-01-17T07:45:37.678859408Z"
+    lastTransitionTime: "2026-01-16T16:50:45.632836754Z"
+- name: aks-la000-99433990-vmss
+  health:
+    status: Healthy
+    nodeCounts:
+      registered:
+        total: 7
+        ready: 7
+        notStarted: 0
+      longUnregistered: 0
+      unregistered: 0
+    cloudProviderTarget: 7
+    minSize: 3
+    maxSize: 250
+    lastProbeTime: "2026-01-19T14:17:22.221891726Z"
+    lastTransitionTime: "2026-01-16T16:50:45.632836754Z"
+  scaleUp:
+    status: NoActivity
+    lastProbeTime: "2026-01-19T14:17:22.221891726Z"
+    lastTransitionTime: "2026-01-16T16:50:45.632836754Z"
+  scaleDown:
+    status: NoCandidates
+    lastProbeTime: "2026-01-17T07:45:37.678859408Z"
+    lastTransitionTime: "2026-01-16T16:50:45.632836754Z"
+- name: akswtt002
+  health:
+    status: Unhealthy
+    nodeCounts:
+      registered:
+        total: 91
+        ready: 42
+        notStarted: 0
+        unready:
+          total: 49
+          resourceUnready: 0
+      longUnregistered: 0
+      unregistered: 0
+    cloudProviderTarget: 91
+    minSize: 0
+    maxSize: 250
+    lastProbeTime: "2026-01-19T14:17:22.221891726Z"
+    lastTransitionTime: "2026-01-17T08:02:56.944264654Z"
+  scaleUp:
+    status: Unhealthy
+    lastProbeTime: "2026-01-19T14:17:22.221891726Z"
+    lastTransitionTime: "2026-01-17T08:02:56.944264654Z"
+  scaleDown:
+    status: CandidatesPresent
+    candidates: 42
+    lastProbeTime: "2026-01-17T07:45:37.678859408Z"
+    lastTransitionTime: "2026-01-16T16:50:45.632836754Z"
+- name: akswp002
+  health:
+    status: Healthy
+    cloudProviderTarget: 0
+    minSize: 0
+    maxSize: 250
+  scaleUp:
+    status: NoActivity
+  scaleDown:
+    status: NoCandidates
+    lastProbeTime: "2026-01-17T07:45:37.678859408Z"
+    lastTransitionTime: "2026-01-16T16:50:45.632836754Z"
