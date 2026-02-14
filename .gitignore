@@ -11,6 +11,9 @@ debug/
 file-history/
 plans/
 stats-cache.json
+paste-cache/
+tasks/
+teams/
 
 # Temporary files
 *.tmp
